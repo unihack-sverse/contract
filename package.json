@@ -1,0 +1,27 @@
+{
+  "name": "@sverse/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sverse smart contracts for Avalanche C-Chain",
+  "license": "MIT",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:coverage": "hardhat coverage",
+    "wallet:fuji": "node scripts/create-fuji-wallet.js",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:fuji": "hardhat run scripts/deploy.js --network fuji",
+    "verify:fuji": "hardhat run scripts/verify.js --network fuji",
+    "clean": "hardhat clean"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "5.4.0",
+    "dotenv": "17.2.1"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "6.1.0",
+    "hardhat": "2.28.0",
+    "solidity-coverage": "0.8.16"
+  }
+}
