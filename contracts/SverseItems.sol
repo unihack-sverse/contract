@@ -39,6 +39,8 @@ contract SverseItems is
     mapping(bytes32 studioId => address wallet) public studioWallets;
     mapping(address wallet => bytes32 studioId) public studioIds;
     mapping(bytes32 gameId => bytes32 studioId) public gameStudios;
+    mapping(bytes32 definitionRef => uint256 definitionId) public definitionRefs;
+    mapping(bytes32 mintRef => uint256 tokenId) public mintRefs;
     mapping(uint256 definitionId => ItemDefinition definition) private _definitions;
     mapping(uint256 definitionId => string definitionURI) private _definitionURIs;
     mapping(uint256 definitionId => uint256 amount) public totalMinted;
@@ -46,6 +48,7 @@ contract SverseItems is
 
     error ZeroAddress();
     error EmptyId();
+    error EmptyRef();
     error StudioAlreadyRegistered(bytes32 studioId);
     error WalletAlreadyRegistered(address wallet);
     error StudioNotRegistered(bytes32 studioId);
@@ -54,6 +57,8 @@ contract SverseItems is
     error NotStudioOrPlatform();
     error DefinitionNotFound(uint256 definitionId);
     error DefinitionInactive(uint256 definitionId);
+    error DefinitionRefAlreadyUsed(bytes32 definitionRef, uint256 definitionId);
+    error MintRefAlreadyUsed(bytes32 mintRef, uint256 tokenId);
     error InvalidSupply();
     error SupplyExceeded(uint256 definitionId, uint256 requested, uint256 remaining);
     error InvalidRoyalty(uint96 royaltyBps);
@@ -70,6 +75,10 @@ contract SverseItems is
         bool living,
         uint128 maxSupply
     );
+    event ItemDefinitionRefBound(
+        bytes32 indexed definitionRef,
+        uint256 indexed definitionId
+    );
     event ItemDefinitionStatusChanged(uint256 indexed definitionId, bool active);
     event DefinitionURIChanged(uint256 indexed definitionId, string newURI);
     event DefinitionMetadataFrozen(uint256 indexed definitionId);
@@ -77,6 +86,13 @@ contract SverseItems is
         address indexed to,
         uint256 indexed tokenId,
         uint256 indexed definitionId,
+        uint256 amount
+    );
+    event ItemMintedWithRef(
+        bytes32 indexed mintRef,
+        address indexed to,
+        uint256 indexed tokenId,
+        uint256 definitionId,
         uint256 amount
     );
 
@@ -115,7 +131,7 @@ contract SverseItems is
         bool transferable,
         bool living,
         string calldata definitionURI
-    ) external returns (uint256 definitionId) {
+    ) public returns (uint256 definitionId) {
         bytes32 studioId = gameStudios[gameId];
         if (studioId == bytes32(0)) revert GameNotRegistered(gameId);
         address studioWallet = studioWallets[studioId];
@@ -148,11 +164,36 @@ contract SverseItems is
         emit DefinitionURIChanged(definitionId, definitionURI);
     }
 
+    function createItemDefinitionWithRef(
+        bytes32 definitionRef,
+        bytes32 gameId,
+        uint128 maxSupply,
+        uint96 royaltyBps,
+        bool transferable,
+        bool living,
+        string calldata definitionURI
+    ) external returns (uint256 definitionId) {
+        if (definitionRef == bytes32(0)) revert EmptyRef();
+        if (definitionRefs[definitionRef] != 0) {
+            revert DefinitionRefAlreadyUsed(definitionRef, definitionRefs[definitionRef]);
+        }
+        definitionId = createItemDefinition(
+            gameId,
+            maxSupply,
+            royaltyBps,
+            transferable,
+            living,
+            definitionURI
+        );
+        definitionRefs[definitionRef] = definitionId;
+        emit ItemDefinitionRefBound(definitionRef, definitionId);
+    }
+
     function mint(
         address to,
         uint256 definitionId,
         uint256 amount
-    ) external onlyRole(MINTER_ROLE) whenNotPaused returns (uint256 tokenId) {
+    ) public onlyRole(MINTER_ROLE) whenNotPaused returns (uint256 tokenId) {
         if (to == address(0)) revert ZeroAddress();
         ItemDefinition storage definition = _requireDefinition(definitionId);
         if (!definition.active) revert DefinitionInactive(definitionId);
@@ -174,6 +215,21 @@ contract SverseItems is
 
         _mint(to, tokenId, amount, "");
         emit ItemMinted(to, tokenId, definitionId, amount);
+    }
+
+    function mintWithRef(
+        address to,
+        uint256 definitionId,
+        uint256 amount,
+        bytes32 mintRef
+    ) external onlyRole(MINTER_ROLE) whenNotPaused returns (uint256 tokenId) {
+        if (mintRef == bytes32(0)) revert EmptyRef();
+        if (mintRefs[mintRef] != 0) {
+            revert MintRefAlreadyUsed(mintRef, mintRefs[mintRef]);
+        }
+        tokenId = mint(to, definitionId, amount);
+        mintRefs[mintRef] = tokenId;
+        emit ItemMintedWithRef(mintRef, to, tokenId, definitionId, amount);
     }
 
     function burn(address account, uint256 tokenId, uint256 amount) external {
