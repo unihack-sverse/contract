@@ -205,6 +205,12 @@ Use multisig studio wallets where operational continuity matters.
 
 ## Backend integration
 
+Sync compiled contract ABIs into `../backend-v2/src/adapters/chain/abi` after contract changes:
+
+```bash
+npm run export:abi
+```
+
 Only the chain adapter should import ethers and contract ABIs:
 
 ```text

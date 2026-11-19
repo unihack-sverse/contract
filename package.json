@@ -12,7 +12,10 @@
     "node": "hardhat node",
     "deploy:local": "hardhat run scripts/deploy.js --network localhost",
     "deploy:fuji": "hardhat run scripts/deploy.js --network fuji",
+    "grant:relayer:local": "hardhat run scripts/grant-relayer-roles.js --network localhost",
+    "grant:relayer:fuji": "hardhat run scripts/grant-relayer-roles.js --network fuji",
     "verify:fuji": "hardhat run scripts/verify.js --network fuji",
+    "export:abi": "hardhat compile && node -e \"const fs=require('fs'),os=require('os'),path=require('path');const names=['MockSRV','SverseItems','SverseDeedRegistry','SverseStore','SverseMarketplace','SverseRewards'];const out=path.resolve('../backend-v2/src/adapters/chain/abi');fs.mkdirSync(out,{recursive:true});for(const n of names){const a=JSON.parse(fs.readFileSync(path.join('artifacts/contracts',n+'.sol',n+'.json'),'utf8'));fs.writeFileSync(path.join(out,n+'.json'),JSON.stringify({contractName:n,abi:a.abi},null,2).replace(/\\n/g,os.EOL)+os.EOL);}\"",
     "clean": "hardhat clean"
   },
   "dependencies": {
