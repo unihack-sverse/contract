@@ -5,6 +5,7 @@ coverage/
 coverage.json
 typechain-types/
 deployments/*.json
+!deployments/fuji.json
 .env
 *.log
 
