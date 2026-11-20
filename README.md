@@ -121,6 +121,27 @@ npm run deploy:local
 
 The script writes addresses to `deployments/localhost.json`.
 
+Grant least-privilege operational roles to a dedicated local relayer wallet:
+
+```bash
+RELAYER_ADDRESS=0xYOUR_LOCAL_RELAYER npm run grant:relayer:local
+```
+
+When using `transfer` settlement mode (so the relayer should not mint
+`MockSRV`), set `SKIP_MOCKSRV_MINTER=true`:
+
+```bash
+RELAYER_ADDRESS=0xYOUR_LOCAL_RELAYER SKIP_MOCKSRV_MINTER=true npm run grant:relayer:local
+```
+
+The script grants only the minimum operational roles (`SverseItems.MINTER_ROLE`,
+`SverseItems.PLATFORM_ROLE`, `SverseDeedRegistry.WITNESS_ROLE`,
+`SverseRewards.PUBLISHER_ROLE`, and `MockSRV.MINTER_ROLE` unless
+`SKIP_MOCKSRV_MINTER=true`). It never grants `DEFAULT_ADMIN_ROLE` or
+`PAUSER_ROLE`, and refuses to run if `RELAYER_ADDRESS` matches the
+admin/deployer address (local development can override this guard with
+`ALLOW_SAME_ADMIN_RELAYER=true`).
+
 ## Avalanche Fuji deployment
 
 Fuji C-Chain configuration:
@@ -167,10 +188,47 @@ The deployment script:
 3. registers `SverseItems` as a trusted deed collection;
 4. hands operational and admin roles to `ADMIN_ADDRESS`;
 5. renounces deployer roles when the admin differs from the deployer;
-6. writes `deployments/fuji.json` locally.
+6. writes `deployments/fuji.json`.
 
-Deployment manifests are ignored by git by default. Commit a reviewed Fuji
-manifest explicitly when public addresses should be versioned.
+`deployments/fuji.json` is tracked in git as the public Fuji deployment
+manifest, while `deployments/localhost.json` and other network deployment
+manifests remain ignored by `.gitignore`.
+
+### Grant relayer operational roles on Fuji
+
+Using the admin/deployer signer configured in `.env`, grant least-privilege
+operational roles to a dedicated Fuji relayer wallet:
+
+```bash
+RELAYER_ADDRESS=0xYOUR_FUJI_RELAYER npm run grant:relayer:fuji
+```
+
+When using `transfer` settlement mode (so the relayer should not mint
+`MockSRV`), set `SKIP_MOCKSRV_MINTER=true`:
+
+```bash
+RELAYER_ADDRESS=0xYOUR_FUJI_RELAYER SKIP_MOCKSRV_MINTER=true npm run grant:relayer:fuji
+```
+
+The script grants only the minimum operational roles (`SverseItems.MINTER_ROLE`,
+`SverseItems.PLATFORM_ROLE`, `SverseDeedRegistry.WITNESS_ROLE`,
+`SverseRewards.PUBLISHER_ROLE`, and `MockSRV.MINTER_ROLE` unless
+`SKIP_MOCKSRV_MINTER=true`). It never grants `DEFAULT_ADMIN_ROLE` or
+`PAUSER_ROLE`, verifies both remain absent on every contract, and refuses to
+run if `RELAYER_ADDRESS` matches the admin/deployer address.
+
+### Deployed Fuji addresses
+
+Current public Fuji deployment (from [`deployments/fuji.json`](./deployments/fuji.json), chain ID `43113`, deployed `2026-11-17T16:05:14.691Z`):
+
+| Contract | Address | Explorer |
+| --- | --- | --- |
+| `MockSRV` | `0xe604f4A90aaCBe8AC63fE7610183d75127321e37` | [Snowtrace Testnet](https://subnets-test.avax.network/c-chain/address/0xe604f4A90aaCBe8AC63fE7610183d75127321e37) |
+| `SverseItems` | `0xad4210A2764abFd1bD87aC0922261079BC422F4b` | [Snowtrace Testnet](https://subnets-test.avax.network/c-chain/address/0xad4210A2764abFd1bD87aC0922261079BC422F4b) |
+| `SverseDeedRegistry` | `0x0345Bd9D7f1453d5B16e46A73F3D679dE308C441` | [Snowtrace Testnet](https://subnets-test.avax.network/c-chain/address/0x0345Bd9D7f1453d5B16e46A73F3D679dE308C441) |
+| `SverseStore` | `0xe76a9f90757f458683689031E721cCF8f4D22469` | [Snowtrace Testnet](https://subnets-test.avax.network/c-chain/address/0xe76a9f90757f458683689031E721cCF8f4D22469) |
+| `SverseMarketplace` | `0x5C9dB40EB57aCA7774B1FF3384855156e2259699` | [Snowtrace Testnet](https://subnets-test.avax.network/c-chain/address/0x5C9dB40EB57aCA7774B1FF3384855156e2259699) |
+| `SverseRewards` | `0x26141f4F6C9a8Af5BD3A30565Fee8d551bEb7688` | [Snowtrace Testnet](https://subnets-test.avax.network/c-chain/address/0x26141f4F6C9a8Af5BD3A30565Fee8d551bEb7688) |
 
 ## Contract verification
 
@@ -204,6 +262,12 @@ studio. A studio may only create definitions for its own registered games.
 Use multisig studio wallets where operational continuity matters.
 
 ## Backend integration
+
+Sync compiled contract ABIs into `../backend-v2/src/adapters/chain/abi` after contract changes:
+
+```bash
+npm run export:abi
+```
 
 Only the chain adapter should import ethers and contract ABIs:
 

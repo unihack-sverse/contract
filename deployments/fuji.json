@@ -1,0 +1,17 @@
+{
+  "network": "fuji",
+  "chainId": 43113,
+  "deployedAt": "2026-11-17T16:05:14.691Z",
+  "deployer": "0xB49EFad979A0AA0F80aC5a5381fA89E861724c30",
+  "admin": "0xB49EFad979A0AA0F80aC5a5381fA89E861724c30",
+  "treasury": "0xB49EFad979A0AA0F80aC5a5381fA89E861724c30",
+  "protocolFeeBps": 250,
+  "contracts": {
+    "MockSRV": "0xe604f4A90aaCBe8AC63fE7610183d75127321e37",
+    "SverseItems": "0xad4210A2764abFd1bD87aC0922261079BC422F4b",
+    "SverseDeedRegistry": "0x0345Bd9D7f1453d5B16e46A73F3D679dE308C441",
+    "SverseStore": "0xe76a9f90757f458683689031E721cCF8f4D22469",
+    "SverseMarketplace": "0x5C9dB40EB57aCA7774B1FF3384855156e2259699",
+    "SverseRewards": "0x26141f4F6C9a8Af5BD3A30565Fee8d551bEb7688"
+  }
+}
